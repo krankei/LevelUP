@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,9 +28,8 @@
                 Upgrade your life, one task at a time.
             </p>
 
-            <a href="#"
-               class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg text-lg transition">
-                Get Started
+            <a href="{% url 'login' %}">
+                <button>Get Started</button>
             </a>
         </div>
     </div>

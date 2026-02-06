@@ -1,0 +1,97 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Dashboard | LevelUP</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Google Fonts -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    />
+
+    <!-- Dashboard CSS -->
+    <link rel="stylesheet" href="{% static 'dashboard.css' %}">
+  </head>
+
+  <body>
+    <div class="home-container1">
+      <div class="home-container2">
+
+        <!-- ✅ Logout (POST only, correct way) -->
+        <form method="post" action="{% url 'logout' %}" style="text-align: right;">
+          {% csrf_token %}
+          <button type="submit">Logout</button>
+        </form>
+
+        <h1>You will Level-Up here!</h1>
+        <div style="margin: 15px 0; font-weight: 600;">
+          {% if total_tasks > 0 %}
+          <p>
+            Progress: {{ completed_tasks }} / {{ total_tasks }}
+            ({{ progress_percent }}%)
+          </p>
+          {% else %}
+          <p>
+            No tasks yet — start by adding one 💪
+          </p>
+          {% endif %}
+        </div>
+
+
+        <!-- ✅ Create Task Form -->
+        <form method="post" style="margin-bottom: 20px;">
+          {% csrf_token %}
+          <input
+            type="text"
+            name="title"
+            placeholder="Enter a task"
+            required
+          />
+          <button type="submit" class="home-thq-create-a-task-elm button">
+            Create task
+          </button>
+        </form>
+
+        <button type="button" class="home-button button">
+          Weekly progress
+        </button>
+
+        <!-- ✅ Task List -->
+        {% for task in tasks %}
+        <form method="post" style="display: flex; align-items: center; gap: 10px;">
+          {% csrf_token %}
+          <input type="hidden" name="task_id" value="{{ task.id }}">
+
+    <!-- Toggle -->
+    <input
+      type="checkbox"
+      onchange="this.form.submit()"
+      {% if task.is_completed %}checked{% endif %}
+    />
+
+    <span>{{ task.title }}</span>
+
+    <!-- Delete -->
+    <button
+      type="submit"
+      name="delete"
+      value="1"
+      style="margin-left: auto;"
+    >
+      ❌
+    </button>
+  </form>
+{% empty %}
+  <p>No tasks yet.</p>
+{% endfor %}
+
+
+
+      </div>
+    </div>
+  </body>
+</html>
