@@ -1,97 +1,140 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Dashboard | LevelUP</title>
+<head>
+  <meta charset="utf-8" />
+  <title>Dashboard | LevelUP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="{% static 'dashboard.css' %}">
+</head>
 
-    <!-- Google Fonts -->
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-    />
+<body>
+  <div class="home-container1">
+    <div class="home-container2">
 
-    <!-- Dashboard CSS -->
-    <link rel="stylesheet" href="{% static 'dashboard.css' %}">
-  </head>
+      <!-- Logout -->
+      <form method="post" action="{% url 'logout' %}" style="text-align:right;">
+        {% csrf_token %}
+        <button type="submit">Logout</button>
+      </form>
 
-  <body>
-    <div class="home-container1">
-      <div class="home-container2">
+      <h1>You will Level-Up here!</h1>
 
-        <!-- ✅ Logout (POST only, correct way) -->
-        <form method="post" action="{% url 'logout' %}" style="text-align: right;">
+      <!-- MODE TOGGLE -->
+      <div style="display:flex;align-items:center;gap:10px;margin:15px 0;">
+        <span>Daily</span>
+
+        <label class="switch">
+          <input
+            type="checkbox"
+            {% if mode == 'weekly' %}checked{% endif %}
+            onchange="window.location.href='?mode=' + (this.checked ? 'weekly' : 'daily')"
+          >
+          <span class="slider round"></span>
+        </label>
+
+        <span>Weekly</span>
+      </div>
+
+      <!-- ================= DAILY MODE ================= -->
+      {% if mode == 'daily' %}
+        <p>
+          <strong>Progress:</strong>
+          {{ completed_tasks }} / {{ total_tasks }} ({{ progress_percent }}%)
+        </p>
+
+        <form method="post" style="margin-bottom:20px;">
           {% csrf_token %}
-          <button type="submit">Logout</button>
+          <input type="text" name="title" placeholder="Enter a task" required>
+          <button type="submit">Create task</button>
         </form>
 
-        <h1>You will Level-Up here!</h1>
-        <div style="margin: 15px 0; font-weight: 600;">
-          {% if total_tasks > 0 %}
-          <p>
-            Progress: {{ completed_tasks }} / {{ total_tasks }}
-            ({{ progress_percent }}%)
-          </p>
-          {% else %}
-          <p>
-            No tasks yet — start by adding one 💪
-          </p>
-          {% endif %}
-        </div>
+        <h3>Daily Tasks</h3>
 
+        {% for task in tasks %}
+          <form method="post" style="display:flex;align-items:center;gap:10px;">
+            {% csrf_token %}
+            <input type="hidden" name="task_id" value="{{ task.id }}">
 
-        <!-- ✅ Create Task Form -->
-        <form method="post" style="margin-bottom: 20px;">
+            <input
+              type="checkbox"
+              onchange="this.form.submit()"
+              {% if task.is_completed %}checked{% endif %}
+            >
+
+            <span {% if task.is_completed %}style="text-decoration:line-through;opacity:0.6;"{% endif %}>
+              {{ task.title }}
+            </span>
+
+            <button type="submit" name="delete" value="1" style="margin-left:auto;">
+              ❌
+            </button>
+          </form>
+        {% empty %}
+          <p>No daily tasks yet.</p>
+        {% endfor %}
+      {% endif %}
+
+      <!-- ================= WEEKLY MODE ================= -->
+      {% if mode == 'weekly' %}
+        <h3>Weekly Planner</h3>
+
+        <!-- WEEKLY TASK CREATION -->
+        <form method="post" style="margin-bottom:20px; display:flex; gap:10px;">
           {% csrf_token %}
+
           <input
             type="text"
             name="title"
-            placeholder="Enter a task"
+            placeholder="Task name (e.g. Workout)"
             required
-          />
-          <button type="submit" class="home-thq-create-a-task-elm button">
-            Create task
-          </button>
+          >
+
+          <!-- 24-hour custom time -->
+          <input
+            type="time"
+            name="time_slot"
+            required
+          >
+
+          <button type="submit">Add weekly task</button>
         </form>
 
-        <button type="button" class="home-button button">
-          Weekly progress
-        </button>
+        <!-- EXCEL-STYLE GRID -->
+        <table border="1" cellpadding="8" style="border-collapse:collapse;">
+          <tr>
+            <th>Time</th>
+            <th>Task</th>
+            <th>Mon</th>
+            <th>Tue</th>
+            <th>Wed</th>
+            <th>Thu</th>
+            <th>Fri</th>
+            <th>Sat</th>
+            <th>Sun</th>
+          </tr>
 
-        <!-- ✅ Task List -->
-        {% for task in tasks %}
-        <form method="post" style="display: flex; align-items: center; gap: 10px;">
-          {% csrf_token %}
-          <input type="hidden" name="task_id" value="{{ task.id }}">
+          {% for task in weekly_tasks %}
+          <tr>
+            <td><strong>{{ task.time_slot }}</strong></td>
+            <td>{{ task.title }}</td>
 
-    <!-- Toggle -->
-    <input
-      type="checkbox"
-      onchange="this.form.submit()"
-      {% if task.is_completed %}checked{% endif %}
-    />
+            {% for day in "MTWTFSS" %}
+              <td style="text-align:center;">
+                <input type="checkbox">
+              </td>
+            {% endfor %}
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="9">No weekly tasks yet</td>
+          </tr>
+          {% endfor %}
+        </table>
+      {% endif %}
 
-    <span>{{ task.title }}</span>
-
-    <!-- Delete -->
-    <button
-      type="submit"
-      name="delete"
-      value="1"
-      style="margin-left: auto;"
-    >
-      ❌
-    </button>
-  </form>
-{% empty %}
-  <p>No tasks yet.</p>
-{% endfor %}
-
-
-
-      </div>
     </div>
-  </body>
+  </div>
+</body>
 </html>
