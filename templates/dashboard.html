@@ -1,11 +1,12 @@
 {% load static %}
+{% load customtags %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>Dashboard | LevelUP</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <link rel="stylesheet" href="{% static 'dashboard.css' %}">
 </head>
 
@@ -13,7 +14,6 @@
   <div class="home-container1">
     <div class="home-container2">
 
-      <!-- Logout -->
       <form method="post" action="{% url 'logout' %}" style="text-align:right;">
         {% csrf_token %}
         <button type="submit">Logout</button>
@@ -21,10 +21,29 @@
 
       <h1>You will Level-Up here!</h1>
 
-      <!-- MODE TOGGLE -->
+      <!-- 🧠 LEVEL + XP -->
+      <p><strong>Level:</strong> {{ level }}</p>
+      <p><strong>Total XP:</strong> {{ total_xp }}</p>
+      <p><strong>Next Level at:</strong> {{ next_level_xp }} XP</p>
+      <div style="background:#e5e7eb; border-radius:10px; height:20px; width:100%; margin:8px 0;">
+        <div style="
+        background:#4f46e5;
+        height:100%;
+        width:{{ xp_percent }}%;
+        border-radius:10px;
+        transition:0.3s;
+      "></div>
+</div>
+
+<p>{{ xp_percent }}% to next level</p>
+
+
+      <!-- 🔥 STREAK -->
+      <p><strong>🔥 Current Streak:</strong> {{ streak }} days</p>
+
+      <!-- Mode Toggle -->
       <div style="display:flex;align-items:center;gap:10px;margin:15px 0;">
         <span>Daily</span>
-
         <label class="switch">
           <input
             type="checkbox"
@@ -33,105 +52,132 @@
           >
           <span class="slider round"></span>
         </label>
-
         <span>Weekly</span>
       </div>
 
-      <!-- ================= DAILY MODE ================= -->
       {% if mode == 'daily' %}
-        <p>
-          <strong>Progress:</strong>
-          {{ completed_tasks }} / {{ total_tasks }} ({{ progress_percent }}%)
-        </p>
 
-        <form method="post" style="margin-bottom:20px;">
+      <p><strong>Today's Progress:</strong> {{ progress_percent }}%</p>
+
+      <form method="post" style="margin-bottom:20px; display:flex; gap:10px;">
+        {% csrf_token %}
+        <input type="text" name="title" placeholder="Enter task" required>
+
+        <select name="task_type" required>
+          <option value="">Type</option>
+          <option value="MAIN">Main Quest</option>
+          <option value="SIDE">Side Quest</option>
+        </select>
+
+        <input type="time" name="time_slot">
+        <input type="number" name="duration_hours" min="1" value="1" style="width:70px;">
+
+        <button type="submit">Add</button>
+      </form>
+
+      <h3>🏆 Main Quests</h3>
+
+      {% for task in main_tasks %}
+        <form method="post" style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
           {% csrf_token %}
-          <input type="text" name="title" placeholder="Enter a task" required>
-          <button type="submit">Create task</button>
+          <input type="hidden" name="task_id" value="{{ task.id }}">
+          <input type="hidden" name="action" value="toggle_today">
+
+          <input type="checkbox"
+                 onchange="this.form.submit()"
+                 {% if today_progress|get_item:task.id %}checked{% endif %}>
+
+          <strong>{{ task.time_slot|time:"g:i A" }}</strong>
+
+          <span {% if today_progress|get_item:task.id %}style="text-decoration:line-through; opacity:0.6;"{% endif %}>
+            {{ task.title }} (+{{ task.xp_value }} XP)
+          </span>
+
+          <button type="submit" name="delete" value="1" style="margin-left:auto;">
+            ❌
+          </button>
         </form>
+      {% empty %}
+        <p>No Main Quests yet.</p>
+      {% endfor %}
 
-        <h3>Daily Tasks</h3>
+      <h3 style="margin-top:25px;">🟡 Side Quests</h3>
 
-        {% for task in tasks %}
-          <form method="post" style="display:flex;align-items:center;gap:10px;">
-            {% csrf_token %}
-            <input type="hidden" name="task_id" value="{{ task.id }}">
+      {% for task in side_tasks %}
+        <form method="post" style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+          {% csrf_token %}
+          <input type="hidden" name="task_id" value="{{ task.id }}">
+          <input type="hidden" name="action" value="toggle_today">
 
-            <input
-              type="checkbox"
-              onchange="this.form.submit()"
-              {% if task.is_completed %}checked{% endif %}
-            >
+          <input type="checkbox"
+                 onchange="this.form.submit()"
+                 {% if today_progress|get_item:task.id %}checked{% endif %}>
 
-            <span {% if task.is_completed %}style="text-decoration:line-through;opacity:0.6;"{% endif %}>
-              {{ task.title }}
-            </span>
+          <span {% if today_progress|get_item:task.id %}style="text-decoration:line-through; opacity:0.6;"{% endif %}>
+            {{ task.title }} (+{{ task.xp_value }} XP)
+          </span>
 
-            <button type="submit" name="delete" value="1" style="margin-left:auto;">
-              ❌
-            </button>
-          </form>
-        {% empty %}
-          <p>No daily tasks yet.</p>
-        {% endfor %}
+          <button type="submit" name="delete" value="1" style="margin-left:auto;">
+            ❌
+          </button>
+        </form>
+      {% empty %}
+        <p>No Side Quests yet.</p>
+      {% endfor %}
+
       {% endif %}
 
-      <!-- ================= WEEKLY MODE ================= -->
       {% if mode == 'weekly' %}
-        <h3>Weekly Planner</h3>
 
-        <!-- WEEKLY TASK CREATION -->
-        <form method="post" style="margin-bottom:20px; display:flex; gap:10px;">
-          {% csrf_token %}
+      <p><strong>Weekly Progress:</strong> {{ weekly_percent }}%</p>
 
-          <input
-            type="text"
-            name="title"
-            placeholder="Task name (e.g. Workout)"
-            required
-          >
+      <h3>Weekly Planner</h3>
 
-          <!-- 24-hour custom time -->
-          <input
-            type="time"
-            name="time_slot"
-            required
-          >
-
-          <button type="submit">Add weekly task</button>
-        </form>
-
-        <!-- EXCEL-STYLE GRID -->
-        <table border="1" cellpadding="8" style="border-collapse:collapse;">
-          <tr>
-            <th>Time</th>
-            <th>Task</th>
-            <th>Mon</th>
-            <th>Tue</th>
-            <th>Wed</th>
-            <th>Thu</th>
-            <th>Fri</th>
-            <th>Sat</th>
-            <th>Sun</th>
-          </tr>
-
-          {% for task in weekly_tasks %}
-          <tr>
-            <td><strong>{{ task.time_slot }}</strong></td>
-            <td>{{ task.title }}</td>
-
-            {% for day in "MTWTFSS" %}
-              <td style="text-align:center;">
-                <input type="checkbox">
-              </td>
-            {% endfor %}
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="9">No weekly tasks yet</td>
-          </tr>
+      <table border="1" cellpadding="8" style="border-collapse:collapse; width:100%;">
+        <tr>
+          <th>Time</th>
+          <th>Task</th>
+          {% for d in week_dates %}
+            <th>{{ d|date:"D" }}</th>
           {% endfor %}
-        </table>
+          <th>Delete</th>
+        </tr>
+
+        {% for task in weekly_tasks %}
+        <tr>
+          <td>{{ task.time_slot|time:"g:i A" }}</td>
+          <td>{{ task.title }}</td>
+
+          {% for d in week_dates %}
+          <td style="text-align:center;">
+            <form method="post" style="margin:0;">
+              {% csrf_token %}
+              <input type="hidden" name="task_id" value="{{ task.id }}">
+              <input type="hidden" name="selected_date" value="{{ d }}">
+              <input type="hidden" name="action" value="toggle_weekly">
+
+              <input type="checkbox"
+                     onchange="this.form.submit()"
+                     {% if weekly_progress|get_item:task.id|get_item:d %}checked{% endif %}>
+            </form>
+          </td>
+          {% endfor %}
+
+          <td>
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="task_id" value="{{ task.id }}">
+              <button type="submit" name="delete" value="1">❌</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+          <tr>
+            <td colspan="10">No weekly tasks yet.</td>
+          </tr>
+        {% endfor %}
+      </table>
+
       {% endif %}
 
     </div>
