@@ -1,186 +1,329 @@
 {% load static %}
 {% load customtags %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Dashboard | LevelUP</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="{% static 'dashboard.css' %}">
+<meta charset="utf-8"/>
+<title>Dashboard | LevelUP</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<style>
+
+/* ====== BACKGROUND ====== */
+
+body {
+  margin:0;
+  font-family: 'Segoe UI', sans-serif;
+  color:white;
+  overflow-x:hidden;
+}
+
+video {
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:-1;
+}
+
+/* ====== SCANNING TEXT ====== */
+
+.marquee-top,
+.marquee-bottom {
+  position:fixed;
+  width:100%;
+  padding:6px 0;
+  font-size:14px;
+  letter-spacing:2px;
+  color:#00f0ff;
+  background:rgba(0,0,0,0.5);
+  backdrop-filter:blur(5px);
+  white-space:nowrap;
+  overflow:hidden;
+  z-index:5;
+}
+
+.marquee-top { top:0; }
+.marquee-bottom { bottom:0; }
+
+.marquee-top span {
+  display:inline-block;
+  animation:scrollLeft 18s linear infinite;
+}
+
+.marquee-bottom span {
+  display:inline-block;
+  animation:scrollRight 18s linear infinite;
+}
+
+@keyframes scrollLeft {
+  from { transform:translateX(-100%); }
+  to { transform:translateX(100%); }
+}
+
+@keyframes scrollRight {
+  from { transform:translateX(100%); }
+  to { transform:translateX(-100%); }
+}
+
+/* ====== MAIN PANEL ====== */
+
+.home-container1 {
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:60px 20px;
+}
+
+.home-container2 {
+  width:750px;
+  padding:40px;
+
+  background:rgba(0,0,30,0.7);
+  backdrop-filter:blur(25px);
+
+  border:2px solid #00f0ff;
+  border-radius:15px;
+
+  box-shadow:
+    0 0 60px rgba(0,255,255,0.6),
+    inset 0 0 40px rgba(0,255,255,0.3);
+
+  text-align:center;
+}
+
+/* ====== INPUTS & BUTTONS ====== */
+
+input, select, button {
+  background:rgba(0,0,0,0.5);
+  border:1px solid #00f0ff;
+  color:white;
+  padding:6px 8px;
+}
+
+button {
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover {
+  background:#00f0ff;
+  color:black;
+}
+
+form {
+  margin-bottom:8px;
+}
+
+/* XP BAR */
+
+.xp-bar {
+  background:rgba(255,255,255,0.1);
+  border-radius:20px;
+  height:18px;
+  margin:10px 0;
+  overflow:hidden;
+}
+
+.xp-fill {
+  height:100%;
+  background:linear-gradient(90deg,#00f0ff,#0066ff);
+  transition:width 0.4s ease;
+}
+
+/* TABLE */
+
+table {
+  background:rgba(0,0,0,0.6);
+  border:1px solid #00f0ff;
+  color:white;
+}
+
+th, td {
+  border:1px solid rgba(0,255,255,0.3);
+}
+
+h1,h3 {
+  color:#00f0ff;
+}
+
+</style>
 </head>
 
 <body>
-  <div class="home-container1">
-    <div class="home-container2">
 
-      <form method="post" action="{% url 'logout' %}" style="text-align:right;">
-        {% csrf_token %}
-        <button type="submit">Logout</button>
-      </form>
+<video autoplay muted loop playsinline>
+  <source src="{% static 'videos/system-bg.mp4' %}" type="video/mp4">
+</video>
 
-      <h1>You will Level-Up here!</h1>
-
-      <!-- 🧠 LEVEL + XP -->
-      <p><strong>Level:</strong> {{ level }}</p>
-      <p><strong>Total XP:</strong> {{ total_xp }}</p>
-      <p><strong>Next Level at:</strong> {{ next_level_xp }} XP</p>
-      <div style="background:#e5e7eb; border-radius:10px; height:20px; width:100%; margin:8px 0;">
-        <div style="
-        background:#4f46e5;
-        height:100%;
-        width:{{ xp_percent }}%;
-        border-radius:10px;
-        transition:0.3s;
-      "></div>
+<!-- TOP SCROLL -->
+<div class="marquee-top">
+  <span>⚠ SYSTEM NOTICE: You logged in. Unfortunately effort is still required to level up. ⚠</span>
 </div>
 
-<p>{{ xp_percent }}% to next level</p>
+<!-- BOTTOM SCROLL -->
+<div class="marquee-bottom">
+  <span>☠ DAILY QUEST FAILURE WILL RESULT IN SHAME DEBUFF. PROCEED WISELY. ☠</span>
+</div>
 
+<div class="home-container1">
+<div class="home-container2">
 
-      <!-- 🔥 STREAK -->
-      <p><strong>🔥 Current Streak:</strong> {{ streak }} days</p>
+<form method="post" action="{% url 'logout' %}" style="text-align:right;">
+{% csrf_token %}
+<button type="submit">Logout</button>
+</form>
 
-      <!-- Mode Toggle -->
-      <div style="display:flex;align-items:center;gap:10px;margin:15px 0;">
-        <span>Daily</span>
-        <label class="switch">
-          <input
-            type="checkbox"
-            {% if mode == 'weekly' %}checked{% endif %}
-            onchange="window.location.href='?mode=' + (this.checked ? 'weekly' : 'daily')"
-          >
-          <span class="slider round"></span>
-        </label>
-        <span>Weekly</span>
-      </div>
+<h1>⚠ QUEST INFO ⚠</h1>
 
-      {% if mode == 'daily' %}
+<p><strong>Level:</strong> {{ level }}</p>
+<p><strong>Total XP:</strong> {{ total_xp }}</p>
+<p><strong>Next Level at:</strong> {{ next_level_xp }} XP</p>
 
-      <p><strong>Today's Progress:</strong> {{ progress_percent }}%</p>
+<!-- ADD TASK AREA MOVED ABOVE XP BAR -->
+{% if mode == 'daily' %}
+<form method="post" style="margin:20px 0; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+{% csrf_token %}
+<input type="text" name="title" placeholder="Enter task" required>
 
-      <form method="post" style="margin-bottom:20px; display:flex; gap:10px;">
-        {% csrf_token %}
-        <input type="text" name="title" placeholder="Enter task" required>
+<select name="task_type" required>
+<option value="">Type</option>
+<option value="MAIN">Main Quest</option>
+<option value="SIDE">Side Quest</option>
+</select>
 
-        <select name="task_type" required>
-          <option value="">Type</option>
-          <option value="MAIN">Main Quest</option>
-          <option value="SIDE">Side Quest</option>
-        </select>
+<input type="time" name="time_slot">
+<input type="number" name="duration_hours" min="1" value="1" style="width:70px;">
+<button type="submit">Add</button>
+</form>
+{% endif %}
 
-        <input type="time" name="time_slot">
-        <input type="number" name="duration_hours" min="1" value="1" style="width:70px;">
+<div class="xp-bar">
+<div class="xp-fill" style="width: {{ xp_percent|default:0 }}%;"></div>
+</div>
 
-        <button type="submit">Add</button>
-      </form>
+<p><strong>{{ xp_percent|default:0 }}%</strong> to next level</p>
 
-      <h3>🏆 Main Quests</h3>
+<p><strong>🔥 Current Streak:</strong> {{ streak }} days</p>
 
-      {% for task in main_tasks %}
-        <form method="post" style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-          {% csrf_token %}
-          <input type="hidden" name="task_id" value="{{ task.id }}">
-          <input type="hidden" name="action" value="toggle_today">
+<div style="display:flex;align-items:center;gap:10px;justify-content:center;margin:15px 0;">
+<span>Daily</span>
+<label class="switch">
+<input type="checkbox"
+{% if mode == 'weekly' %}checked{% endif %}
+onchange="window.location.href='?mode=' + (this.checked ? 'weekly' : 'daily')">
+<span class="slider round"></span>
+</label>
+<span>Weekly</span>
+</div>
 
-          <input type="checkbox"
-                 onchange="this.form.submit()"
-                 {% if today_progress|get_item:task.id %}checked{% endif %}>
+{% if mode == 'daily' %}
 
-          <strong>{{ task.time_slot|time:"g:i A" }}</strong>
+<p><strong>Today's Progress:</strong> {{ progress_percent }}%</p>
 
-          <span {% if today_progress|get_item:task.id %}style="text-decoration:line-through; opacity:0.6;"{% endif %}>
-            {{ task.title }} (+{{ task.xp_value }} XP)
-          </span>
+<h3>🏆 Main Quests</h3>
 
-          <button type="submit" name="delete" value="1" style="margin-left:auto;">
-            ❌
-          </button>
-        </form>
-      {% empty %}
-        <p>No Main Quests yet.</p>
-      {% endfor %}
+{% for task in main_tasks %}
+<form method="post" style="display:flex; align-items:center; gap:10px;">
+{% csrf_token %}
+<input type="hidden" name="task_id" value="{{ task.id }}">
+<input type="hidden" name="action" value="toggle_today">
 
-      <h3 style="margin-top:25px;">🟡 Side Quests</h3>
+<input type="checkbox"
+onchange="this.form.submit()"
+{% if today_progress|get_item:task.id %}checked{% endif %}>
 
-      {% for task in side_tasks %}
-        <form method="post" style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-          {% csrf_token %}
-          <input type="hidden" name="task_id" value="{{ task.id }}">
-          <input type="hidden" name="action" value="toggle_today">
+<strong>{{ task.time_slot|time:"g:i A" }}</strong>
 
-          <input type="checkbox"
-                 onchange="this.form.submit()"
-                 {% if today_progress|get_item:task.id %}checked{% endif %}>
+<span {% if today_progress|get_item:task.id %}style="text-decoration:line-through; opacity:0.6;"{% endif %}>
+{{ task.title }} (+{{ task.xp_value }} XP)
+</span>
 
-          <span {% if today_progress|get_item:task.id %}style="text-decoration:line-through; opacity:0.6;"{% endif %}>
-            {{ task.title }} (+{{ task.xp_value }} XP)
-          </span>
+<button type="submit" name="delete" value="1" style="margin-left:auto;">❌</button>
+</form>
+{% empty %}
+<p>No Main Quests yet.</p>
+{% endfor %}
 
-          <button type="submit" name="delete" value="1" style="margin-left:auto;">
-            ❌
-          </button>
-        </form>
-      {% empty %}
-        <p>No Side Quests yet.</p>
-      {% endfor %}
+<h3 style="margin-top:25px;">🟡 Side Quests</h3>
 
-      {% endif %}
+{% for task in side_tasks %}
+<form method="post" style="display:flex; align-items:center; gap:10px;">
+{% csrf_token %}
+<input type="hidden" name="task_id" value="{{ task.id }}">
+<input type="hidden" name="action" value="toggle_today">
 
-      {% if mode == 'weekly' %}
+<input type="checkbox"
+onchange="this.form.submit()"
+{% if today_progress|get_item:task.id %}checked{% endif %}>
 
-      <p><strong>Weekly Progress:</strong> {{ weekly_percent }}%</p>
+<span {% if today_progress|get_item:task.id %}style="text-decoration:line-through; opacity:0.6;"{% endif %}>
+{{ task.title }} (+{{ task.xp_value }} XP)
+</span>
 
-      <h3>Weekly Planner</h3>
+<button type="submit" name="delete" value="1" style="margin-left:auto;">❌</button>
+</form>
+{% empty %}
+<p>No Side Quests yet.</p>
+{% endfor %}
 
-      <table border="1" cellpadding="8" style="border-collapse:collapse; width:100%;">
-        <tr>
-          <th>Time</th>
-          <th>Task</th>
-          {% for d in week_dates %}
-            <th>{{ d|date:"D" }}</th>
-          {% endfor %}
-          <th>Delete</th>
-        </tr>
+{% endif %}
 
-        {% for task in weekly_tasks %}
-        <tr>
-          <td>{{ task.time_slot|time:"g:i A" }}</td>
-          <td>{{ task.title }}</td>
+{% if mode == 'weekly' %}
 
-          {% for d in week_dates %}
-          <td style="text-align:center;">
-            <form method="post" style="margin:0;">
-              {% csrf_token %}
-              <input type="hidden" name="task_id" value="{{ task.id }}">
-              <input type="hidden" name="selected_date" value="{{ d }}">
-              <input type="hidden" name="action" value="toggle_weekly">
+<p><strong>Weekly Progress:</strong> {{ weekly_percent }}%</p>
 
-              <input type="checkbox"
-                     onchange="this.form.submit()"
-                     {% if weekly_progress|get_item:task.id|get_item:d %}checked{% endif %}>
-            </form>
-          </td>
-          {% endfor %}
+<table border="1" cellpadding="8" style="border-collapse:collapse; width:100%;">
+<tr>
+<th>Time</th>
+<th>Task</th>
+{% for d in week_dates %}
+<th>{{ d|date:"D" }}</th>
+{% endfor %}
+<th>Delete</th>
+</tr>
 
-          <td>
-            <form method="post">
-              {% csrf_token %}
-              <input type="hidden" name="task_id" value="{{ task.id }}">
-              <button type="submit" name="delete" value="1">❌</button>
-            </form>
-          </td>
-        </tr>
-        {% empty %}
-          <tr>
-            <td colspan="10">No weekly tasks yet.</td>
-          </tr>
-        {% endfor %}
-      </table>
+{% for task in weekly_tasks %}
+<tr>
+<td>{{ task.time_slot|time:"g:i A" }}</td>
+<td>{{ task.title }}</td>
 
-      {% endif %}
+{% for d in week_dates %}
+<td style="text-align:center;">
+<form method="post" style="margin:0;">
+{% csrf_token %}
+<input type="hidden" name="task_id" value="{{ task.id }}">
+<input type="hidden" name="selected_date" value="{{ d }}">
+<input type="hidden" name="action" value="toggle_weekly">
+<input type="checkbox"
+onchange="this.form.submit()"
+{% if weekly_progress|get_item:task.id|get_item:d %}checked{% endif %}>
+</form>
+</td>
+{% endfor %}
 
-    </div>
-  </div>
+<td>
+<form method="post">
+{% csrf_token %}
+<input type="hidden" name="task_id" value="{{ task.id }}">
+<button type="submit" name="delete" value="1">❌</button>
+</form>
+</td>
+</tr>
+{% empty %}
+<tr>
+<td colspan="10">No weekly tasks yet.</td>
+</tr>
+{% endfor %}
+</table>
+
+{% endif %}
+
+</div>
+</div>
+
 </body>
 </html>

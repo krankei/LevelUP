@@ -167,20 +167,22 @@ def dashboard(request):
     xp_percent = int((xp_progress / xp_needed) * 100) if xp_needed > 0 else 0
 
     return render(request, 'dashboard.html', {
-        'main_tasks': main_tasks,
-        'side_tasks': side_tasks,
-        'weekly_tasks': weekly_tasks,
-        'week_dates': week_dates,
-        'weekly_progress': weekly_progress,
-        'today_progress': today_progress,
-        'progress_percent': progress_percent,
-        'weekly_percent': weekly_percent,
-        'streak': streak,
-        'mode': mode,
-        'today': today,
-        'total_xp': profile.total_xp,
-        'level': profile.level,
-    })
+    'main_tasks': main_tasks,
+    'side_tasks': side_tasks,
+    'weekly_tasks': weekly_tasks,
+    'week_dates': week_dates,
+    'weekly_progress': weekly_progress,
+    'today_progress': today_progress,
+    'progress_percent': progress_percent,
+    'weekly_percent': weekly_percent,
+    'streak': streak,
+    'mode': mode,
+    'today': today,
+    'total_xp': profile.total_xp,
+    'level': profile.level,
+    'next_level_xp': next_level_xp,   
+    'xp_percent': xp_percent,         
+})
 
 
 urlpatterns = [
